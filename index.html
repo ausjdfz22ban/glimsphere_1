@@ -1,0 +1,128 @@
+<!DOCTYPE html> 
+<html lang="en-us">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Unity WebGL Player | GlimSphere3D_Visualiser</title>
+  <style>
+    /* Ensure the body and html take up the full viewport size */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+    /* Style the canvas to take up the full viewport */
+    #unity-canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+    /* Style for the logo */
+    #logo {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px; /* Adjust as needed */
+      height: auto;
+      opacity: 1;
+      transition: opacity 2s ease-out; /* Fade-out effect */
+      z-index: 10; /* Ensure it appears above the canvas */
+    }
+    /* Style for the loading bar container */
+    #loading-container {
+      position: absolute;
+      top: calc(50% + 120px); /* Adjust based on the logo height */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px; /* Same width as the logo */
+      height: 10px;
+      background: rgba(0, 0, 0, 0.1); /* Light background for the container */
+      border-radius: 5px;
+      z-index: 10; /* Ensure it appears above the canvas */
+    }
+    /* Style for the loading bar itself */
+    #loading-bar {
+      height: 100%;
+      width: 0%; /* Start at 0% width and fill as loading progresses */
+      background: #00f; /* Blue color for the loading bar */
+      border-radius: 5px;
+      transition: width 0.5s ease; /* Smooth width transition */
+    }
+  </style>
+</head>
+<body>
+  <canvas id="unity-canvas" tabindex="-1"></canvas>
+  <img id="logo" src="Build/Logo.png" alt="Logo">
+  <div id="loading-container">
+    <div id="loading-bar"></div>
+  </div>
+  <script src="Build/web.loader.js"></script>
+  <script>
+    // Check if the device is mobile
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      var meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+
+      var canvas = document.querySelector("#unity-canvas");
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+      canvas.style.position = "fixed";
+    }
+
+    // Create Unity instance
+    createUnityInstance(document.querySelector("#unity-canvas"), {
+      dataUrl: "Build/web.data.unityweb",
+      frameworkUrl: "Build/web.framework.js.unityweb",
+      codeUrl: "Build/web.wasm.unityweb",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "GlimSphere3D",
+      productName: "GlimSphere3D_Visualiser",
+      productVersion: "1.0",
+      matchWebGLToCanvasSize: true, // Ensure this is true to match WebGL canvas size with the DOM element
+      // devicePixelRatio: window.devicePixelRatio // Optional: Override DPI scaling
+    }).then(() => {
+      // Once Unity is fully loaded and ready, fade out the logo and remove loading bar
+      const logo = document.getElementById('logo');
+      const loadingContainer = document.getElementById('loading-container');
+      
+      logo.style.opacity = '0';
+      
+      // Remove the logo element after the fade-out transition is done
+      logo.addEventListener('transitionend', function handleTransitionEnd() {
+        logo.removeEventListener('transitionend', handleTransitionEnd); // Clean up the event listener
+        logo.remove(); // Remove the logo element from the DOM
+      });
+
+      // Remove loading bar container after Unity starts
+      loadingContainer.style.opacity = '0';
+      loadingContainer.addEventListener('transitionend', function handleLoadingTransitionEnd() {
+        loadingContainer.removeEventListener('transitionend', handleLoadingTransitionEnd); // Clean up the event listener
+        loadingContainer.remove(); // Remove the loading bar container from the DOM
+      });
+    }).catch((message) => {
+      console.error('Error creating Unity instance:', message);
+    });
+
+    // Simulate faster loading progress
+    function simulateLoadingProgress() {
+      const loadingBar = document.getElementById('loading-bar');
+      let progress = 0;
+      const interval = setInterval(() => {
+        if (progress >= 100) {
+          clearInterval(interval);
+        } else {
+          progress += 0.2; // Increase progress faster
+          loadingBar.style.width = progress + '%';
+        }
+      }, 1); // Adjust speed as needed
+    }
+
+    simulateLoadingProgress(); // Start the simulation
+  </script>
+</body>
+</html>
